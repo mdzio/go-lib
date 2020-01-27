@@ -3,7 +3,7 @@ package itf
 import (
 	"fmt"
 
-	"github.com/mdzio/go-lib/logging"
+	"github.com/mdzio/go-logging"
 	"github.com/mdzio/go-lib/xmlrpc"
 )
 

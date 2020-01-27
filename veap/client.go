@@ -12,7 +12,7 @@ import (
 
 	"github.com/mdzio/go-lib/util/any"
 
-	"github.com/mdzio/go-lib/logging"
+	"github.com/mdzio/go-logging"
 )
 
 const (

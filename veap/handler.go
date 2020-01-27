@@ -12,7 +12,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/mdzio/go-lib/logging"
+	"github.com/mdzio/go-logging"
 )
 
 const (

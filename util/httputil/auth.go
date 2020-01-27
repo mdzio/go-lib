@@ -3,7 +3,7 @@ package httputil
 import (
 	"net/http"
 
-	"github.com/mdzio/go-lib/logging"
+	"github.com/mdzio/go-logging"
 )
 
 var (

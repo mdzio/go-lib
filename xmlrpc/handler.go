@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"sync"
 
-	"github.com/mdzio/go-lib/logging"
+	"github.com/mdzio/go-logging"
 
 	"golang.org/x/net/html/charset"
 	"golang.org/x/text/encoding/charmap"

@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/mdzio/go-lib/logging"
+	"github.com/mdzio/go-logging"
 )
 
 var log = logging.Get("releng")

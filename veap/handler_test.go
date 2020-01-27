@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mdzio/go-lib/logging"
+	"github.com/mdzio/go-logging"
 )
 
 func init() {

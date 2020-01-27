@@ -12,7 +12,7 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/mdzio/go-lib/logging"
+	"github.com/mdzio/go-logging"
 
 	"golang.org/x/text/encoding/charmap"
 )

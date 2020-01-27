@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/mdzio/go-lib/logging"
+	"github.com/mdzio/go-logging"
 )
 
 const shutdownTimeout = 5 * time.Second

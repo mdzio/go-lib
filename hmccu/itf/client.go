@@ -6,7 +6,7 @@ import (
 
 	"github.com/mdzio/go-lib/xmlrpc"
 
-	"github.com/mdzio/go-lib/logging"
+	"github.com/mdzio/go-logging"
 )
 
 var clnLog = logging.Get("itf-client")
