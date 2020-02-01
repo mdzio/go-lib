@@ -73,9 +73,10 @@ string id; foreach(id, dom.GetObject(ID_SYSTEM_VARIABLES).EnumIDs()) {
 	if ((vt==ivtInteger) && (st==istEnum)) { outvt="ENUM"; }
 	if ((vt==ivtFloat) && (st==istGeneric)) { outvt="FLOAT"; }
 	if ((vt==ivtString) && (st==istChar8859)) { outvt="STRING"; }
-	if (outvt!="") { WriteLine(id # "\t" # sv.Name() # "\t" # sv.ValueMax() # "\t" # sv.ValueUnit() # "\t" #
-		sv.ValueMin() # "\t" # sv.Operations() # "\t" # outvt # "\t" # sv.ValueName0() # "\t" #
-		sv.ValueName1() # "\t" # sv.ValueList()); }
+	var dpinfo=sv.DPInfo().Replace("\t", " ").Replace("\r\n", " ").Replace("\r", " ").Replace("\n", " ");
+	if (outvt!="") { WriteLine(id # "\t" # sv.Name() # "\t" # dpinfo # "\t" # sv.ValueMax() # "\t" #
+		sv.ValueUnit() # "\t" # sv.ValueMin() # "\t" # sv.Operations() # "\t" # outvt # "\t" #
+		sv.ValueName0() # "\t" # sv.ValueName1() # "\t" # sv.ValueList()); }
 }`
 
 const readValueScript = `! Reading value
@@ -118,11 +119,12 @@ var (
 
 // SysVarDef contains meta data about a ReGaHss system variable.
 type SysVarDef struct {
-	ISEID      string
-	Name       string
-	Unit       string
-	Operations int
-	Type       string
+	ISEID       string
+	Name        string
+	Description string
+	Unit        string
+	Operations  int
+	Type        string
 
 	// type: FLOAT
 	Minimum *float64
@@ -143,6 +145,8 @@ func (sv *SysVarDef) String() string {
 	b.WriteString(sv.ISEID)
 	b.WriteString(", name: ")
 	b.WriteString(sv.Name)
+	b.WriteString(", description: ")
+	b.WriteString(sv.Description)
 	b.WriteString(", unit: ")
 	b.WriteString(sv.Unit)
 	b.WriteString(", operations: ")
@@ -178,6 +182,9 @@ func (sv *SysVarDef) Equal(o *SysVarDef) bool {
 		return false
 	}
 	if sv.Name != o.Name {
+		return false
+	}
+	if sv.Description != o.Description {
 		return false
 	}
 	if sv.Unit != o.Unit {
@@ -435,33 +442,35 @@ func (sc *Client) SystemVariables() ([]*SysVarDef, error) {
 	var sysvars []*SysVarDef
 	for _, l := range lines {
 		fs := strings.Split(l, "\t")
-		if len(fs) == 10 {
+		if len(fs) == 11 {
 			var sv SysVarDef
 			// ReGaHss id
 			sv.ISEID = fs[0]
 			// name
 			sv.Name = fs[1]
+			// description
+			sv.Description = fs[2]
 			// unit
-			sv.Unit = fs[3]
+			sv.Unit = fs[4]
 			// operations
-			op, err := strconv.Atoi(fs[5])
+			op, err := strconv.Atoi(fs[6])
 			if err != nil {
 				scriptLog.Warning("Retrieving list of system variables: Invalid operations: ", l)
 				continue
 			}
 			sv.Operations = op
 			// type
-			sv.Type = fs[6]
+			sv.Type = fs[7]
 			// fields for specific data types
 			switch sv.Type {
 			case "FLOAT":
-				min, err := strconv.ParseFloat(fs[4], 64)
+				min, err := strconv.ParseFloat(fs[5], 64)
 				if err != nil {
 					scriptLog.Warning("Retrieving list of system variables: Invalid minimum: ", l)
 					continue
 				}
 				sv.Minimum = &min
-				max, err := strconv.ParseFloat(fs[2], 64)
+				max, err := strconv.ParseFloat(fs[3], 64)
 				if err != nil {
 					scriptLog.Warning("Retrieving list of system variables: Invalid maximum: ", l)
 					continue
@@ -470,10 +479,10 @@ func (sc *Client) SystemVariables() ([]*SysVarDef, error) {
 			case "ALARM":
 				fallthrough
 			case "BOOL":
-				sv.ValueName0 = &fs[7]
-				sv.ValueName1 = &fs[8]
+				sv.ValueName0 = &fs[8]
+				sv.ValueName1 = &fs[9]
 			case "ENUM":
-				l := strings.Split(fs[9], ";")
+				l := strings.Split(fs[10], ";")
 				sv.ValueList = &l
 			}
 			sysvars = append(sysvars, &sv)
