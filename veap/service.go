@@ -2,6 +2,7 @@ package veap
 
 import (
 	"fmt"
+	"reflect"
 	"time"
 )
 
@@ -36,6 +37,20 @@ type PV struct {
 	// Value must be supported by package json.
 	Value interface{}
 	State State
+}
+
+// Equal checks two PVs for equality.
+func (pv PV) Equal(o PV) bool {
+	if pv.Time != o.Time {
+		return false
+	}
+	if pv.State != o.State {
+		return false
+	}
+	if !reflect.DeepEqual(pv.Value, o.Value) {
+		return false
+	}
+	return true
 }
 
 // VEAP service error codes. They are based on the HTTP status codes.
