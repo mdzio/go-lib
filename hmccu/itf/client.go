@@ -124,6 +124,31 @@ func (c *Client) GetParamset(deviceAddress string, paramsetType string) (map[str
 	return r, nil
 }
 
+// PutParamset writes the parameter set.
+func (c *Client) PutParamset(deviceAddress string, paramsetType string, paramset map[string]interface{}) error {
+	clnLog.Debugf("Calling method putParamset(%s, %s) on %s", deviceAddress, paramsetType, c.Addr)
+	// convert value
+	ps, err := xmlrpc.NewValue(paramset)
+	if err != nil {
+		return err
+	}
+	// execute call
+	resp, err := c.Call("putParamset", []*xmlrpc.Value{
+		&xmlrpc.Value{FlatString: deviceAddress},
+		&xmlrpc.Value{FlatString: paramsetType},
+		ps,
+	})
+	if err != nil {
+		return err
+	}
+	// assert empty response
+	err = c.assertEmptyResponse(resp)
+	if err != nil {
+		return fmt.Errorf("Invalid response for method putParamset: %v", err)
+	}
+	return err
+}
+
 func (c *Client) assertEmptyResponse(v *xmlrpc.Value) error {
 	eval := xmlrpc.Q(v)
 	s := eval.String()

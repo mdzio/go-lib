@@ -52,6 +52,21 @@ func (q *Query) Float64() (f float64) {
 	return
 }
 
+// Int gets an int.
+func (q *Query) Int() (i int) {
+	// previous error or empty?
+	if q.Err() != nil || q.value == nil {
+		return
+	}
+	// extract
+	i, ok := q.value.(int)
+	if !ok {
+		*q.err = errors.New("not an int")
+		return
+	}
+	return
+}
+
 // String gets a string.
 func (q *Query) String() (s string) {
 	// previous error or empty?

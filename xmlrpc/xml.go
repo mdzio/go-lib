@@ -306,28 +306,48 @@ func (q *Query) Value() *Value {
 }
 
 // NewValue creates a value from a native data type. Supported types: bool, int,
-// float64, string, []string.
+// float64, string, []string, []interface{} and map[string]interface{}.
 func NewValue(in interface{}) (*Value, error) {
 	out := &Value{}
-	switch v := in.(type) {
+	switch val := in.(type) {
 	case bool:
-		if v {
+		if val {
 			out.Boolean = "1"
 		} else {
 			out.Boolean = "0"
 		}
 	case int:
-		out.I4 = strconv.Itoa(v)
+		out.I4 = strconv.Itoa(val)
 	case float64:
-		out.Double = strconv.FormatFloat(v, 'f', -1, 64)
+		out.Double = strconv.FormatFloat(val, 'f', -1, 64)
 	case string:
-		out.FlatString = v
+		out.FlatString = val
 	case []string:
-		var entries []*Value
-		for _, e := range v {
-			entries = append(entries, &Value{FlatString: e})
+		var es []*Value
+		for _, e := range val {
+			es = append(es, &Value{FlatString: e})
 		}
-		out.Array = &Array{entries}
+		out.Array = &Array{es}
+	case []interface{}:
+		var es []*Value
+		for _, e := range val {
+			cv, err := NewValue(e)
+			if err != nil {
+				return nil, err
+			}
+			es = append(es, cv)
+		}
+		out.Array = &Array{es}
+	case map[string]interface{}:
+		var ms []*Member
+		for n, v := range val {
+			cv, err := NewValue(v)
+			if err != nil {
+				return nil, err
+			}
+			ms = append(ms, &Member{Name: n, Value: cv})
+		}
+		out.Struct = &Struct{Members: ms}
 	default:
 		return nil, fmt.Errorf("Conversion of type %[1]T with value %[1]v is not supported", in)
 	}

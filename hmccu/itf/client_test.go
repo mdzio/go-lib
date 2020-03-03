@@ -7,6 +7,9 @@ Environment variables for integration tests:
 	HMLCSW1_DEVICE:
 		device address of a HM-LC-Sw1 (rf switch actor)
 		attention: state will be changed!
+	HMESPMSW1_DEVICE:
+		device address of a HM-ES-PMSw1 (rf switch actor with meter)
+		attention: TRANSMIT_TRY_MAX from parameter set MASTER will be changed!
 	LOG_LEVEL:
 		off, error, warning, info, debug, trace
 */
@@ -17,6 +20,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/mdzio/go-lib/util/any"
 	"github.com/mdzio/go-logging"
 )
 
@@ -48,6 +52,14 @@ func getHMLCSW1Device(t *testing.T) string {
 	hmlcsw1Device := os.Getenv("HMLCSW1_DEVICE")
 	if len(hmlcsw1Device) == 0 {
 		t.Skip("environment variable HMLCSW1_DEVICE not set")
+	}
+	return hmlcsw1Device
+}
+
+func getHMESPMSW1Device(t *testing.T) string {
+	hmlcsw1Device := os.Getenv("HMESPMSW1_DEVICE")
+	if len(hmlcsw1Device) == 0 {
+		t.Skip("environment variable HMESPMSW1_DEVICE not set")
 	}
 	return hmlcsw1Device
 }
@@ -125,6 +137,36 @@ func TestClient_GetParamset(t *testing.T) {
 			t.Errorf("not a bool: %s", m)
 		}
 	}
+}
+
+func TestClient_GetSetParamsetMaster(t *testing.T) {
+	c := NewClient(getXMLRPCAddr(t))
+
+	ps, err := c.GetParamset(getHMESPMSW1Device(t)+":1", "MASTER")
+	if err != nil {
+		t.Fatal(err)
+	}
+	psm := any.Q(ps).Map()
+	tryMax := psm.Key("TRANSMIT_TRY_MAX").Int()
+	if psm.Err() != nil {
+		t.Fatal(err)
+	}
+
+	err = c.PutParamset(
+		getHMESPMSW1Device(t)+":1",
+		"MASTER",
+		map[string]interface{}{"TRANSMIT_TRY_MAX": tryMax + 1},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// restore previous value
+	err = c.PutParamset(
+		getHMESPMSW1Device(t)+":1",
+		"MASTER",
+		map[string]interface{}{"TRANSMIT_TRY_MAX": tryMax},
+	)
 }
 
 func TestClient_GetSetValue(t *testing.T) {
