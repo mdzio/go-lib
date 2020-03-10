@@ -153,6 +153,38 @@ func (q *Query) String() string {
 	return q.value.FlatString
 }
 
+func (q *Query) allZero() bool {
+	return q.value.Boolean == "" && q.value.I4 == "" && q.value.Int == "" && q.value.Double == "" &&
+		q.value.String == "" && q.value.FlatString == "" && q.value.Base64 == "" &&
+		q.value.DateTime == "" && q.value.Array == nil && q.value.Struct == nil
+}
+
+// IsEmpty returns true, if there is no previous error and the value is empty.
+// An empty value can also be interpreted as an empty string.
+func (q *Query) IsEmpty() bool {
+	// previous error?
+	if q.Err() != nil {
+		return false
+	}
+	// empty optional?
+	if q.value == nil {
+		return true
+	}
+	// all fields have zero value?
+	return q.allZero()
+}
+
+// IsNotEmpty returns true, if there is no previous error and the value is not
+// empty. An empty value can also be interpreted as an empty string.
+func (q *Query) IsNotEmpty() bool {
+	// previous error or empty optional?
+	if q.Err() != nil || q.value == nil {
+		return false
+	}
+	// any field has not zero value?
+	return !q.allZero()
+}
+
 // Float64 gets an XML-RPC double value.
 func (q *Query) Float64() float64 {
 	// previous error or empty optional?

@@ -53,7 +53,13 @@ func (d *DeviceDescription) ReadFrom(e *xmlrpc.Query) {
 	d.Type = e.TryKey("TYPE").String()
 	d.Address = e.TryKey("ADDRESS").String()
 	d.RFAddress = e.TryKey("RF_ADDRESS").Int()
-	d.Children = e.TryKey("CHILDREN").Strings()
+	// The interface VirtualDevices of the CCU returns an empty XML-RPC value
+	// instead of an empty XML-RPC array, if the device has no children.
+	c := e.TryKey("CHILDREN")
+	if c.IsNotEmpty() {
+		// If not empty, it must be an array of strings.
+		d.Children = c.Strings()
+	}
 	d.Parent = e.TryKey("PARENT").String()
 	d.ParentType = e.TryKey("PARENT_TYPE").String()
 	d.Index = e.TryKey("INDEX").Int()
