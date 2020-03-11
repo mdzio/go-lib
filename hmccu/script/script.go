@@ -611,7 +611,8 @@ func (sc *Client) WriteValue(iseID, typeStr string, value interface{}) error {
 		if !ok {
 			return fmt.Errorf("Writing of object %s failed: Invalid type for FLOAT: %#v", iseID, value)
 		}
-		strval = fmt.Sprint(f)
+		// 6 decimal places are supported
+		strval = fmt.Sprintf("%f", f)
 
 	case "STRING":
 		s, ok := value.(string)
