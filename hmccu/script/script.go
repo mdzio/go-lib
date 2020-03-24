@@ -63,6 +63,37 @@ if (dobj && dobj.Type()==OT_DEVICE) {
 	WriteLine("Object not found or has wrong type");
 }`
 
+const enumProgramsScript = `! Enumerating programs
+object eobj = dom.GetObject(ID_PROGRAMS);
+if (eobj) {
+	WriteLine("OK");
+	string id;
+	foreach (id, eobj.EnumIDs()) {
+		object obj = dom.GetObject(id);
+		WriteLine(obj.ID() # "\t" # obj.Name() # "\t" # obj.PrgInfo() # "\t" # obj.Active() # "\t" # obj.Visible());
+	}
+} else {
+	WriteLine("Object not found");
+}`
+
+const execProgramScript = `! Executing program
+object pobj = dom.GetObject({{ . }});
+if (pobj && pobj.Type()==OT_PROGRAM) {
+	pobj.ProgramExecute();
+	WriteLine("OK");
+} else {
+	WriteLine("Object not found or has wrong type");
+}`
+
+const readExecTimeScript = `! Reading last execution time of program
+object pobj = dom.GetObject({{ . }});
+if (pobj && pobj.Type()==OT_PROGRAM) {
+	WriteLine("OK");
+	WriteLine(pobj.ProgramLastExecuteTime());	
+} else {
+	WriteLine("Object not found or has wrong type");
+}`
+
 const enumSysVarsScript = `! Enumerating system variables
 string id; foreach(id, dom.GetObject(ID_SYSTEM_VARIABLES).EnumIDs()) {
 	var sv=dom.GetObject(id);
@@ -112,6 +143,9 @@ var (
 	enumAspectsTempl  = template.Must(template.New("enumAspects").Parse(enumAspectsScript))
 	enumDevicesTempl  = template.Must(template.New("enumDevices").Parse(enumDevicesScript))
 	enumChannelsTempl = template.Must(template.New("enumChannels").Parse(enumChannelsScript))
+	enumProgramsTempl = template.Must(template.New("enumPrograms").Parse(enumProgramsScript))
+	execProgramTempl  = template.Must(template.New("execProgram").Parse(execProgramScript))
+	readExecTimeTempl = template.Must(template.New("readExecTime").Parse(readExecTimeScript))
 	enumSysVarsTempl  = template.Must(template.New("enumSysVars").Parse(enumSysVarsScript))
 	readValueTempl    = template.Must(template.New("readValue").Parse(readValueScript))
 	writeValueTempl   = template.Must(template.New("writeValue").Parse(writeValueScript))
@@ -266,6 +300,15 @@ type ChannelDef struct {
 	Address     string
 	Rooms       []string // ISEID's
 	Functions   []string // ISEID's
+}
+
+// ProgramDef describes a program in the ReGaHss.
+type ProgramDef struct {
+	ISEID       string
+	DisplayName string
+	Description string
+	Active      bool
+	Visible     bool
 }
 
 // Client executes HM scripts remotely on the CCU.
@@ -647,6 +690,74 @@ func (sc *Client) ReadSysVar(sysVar *SysVarDef) (interface{}, time.Time, bool, e
 // WriteSysVar sets the value of a system variable.
 func (sc *Client) WriteSysVar(sysVar *SysVarDef, value interface{}) error {
 	return sc.WriteValue(sysVar.ISEID, sysVar.Type, value)
+}
+
+// Programs retrieves all programs from the CCU.
+func (sc *Client) Programs() ([]*ProgramDef, error) {
+	scriptLog.Debug("Retrieving programs")
+	resp, err := sc.ExecuteTempl(enumProgramsTempl, nil)
+	if err != nil {
+		return nil, err
+	}
+	if len(resp) < 1 {
+		return nil, errors.New("Retrieving programs: Expected at least one response line")
+	}
+	if resp[0] != "OK" {
+		return nil, fmt.Errorf("Retrieving programs: HM script signals error: %s", resp[0])
+	}
+	var ps []*ProgramDef
+	for _, l := range resp[1:] {
+		fs := strings.Split(l, "\t")
+		if len(fs) != 5 {
+			return nil, fmt.Errorf("Retrieving programs: Invalid response line: %s", l)
+		}
+		// fields: ID, Name, PrgInfo, Active, Visible
+		ps = append(ps, &ProgramDef{
+			ISEID:       fs[0],
+			DisplayName: fs[1],
+			Description: fs[2],
+			Active:      fs[3] == "true",
+			Visible:     fs[4] == "true",
+		})
+	}
+	return ps, nil
+}
+
+// ExecProgram executes a ReGaHssProgram.
+func (sc *Client) ExecProgram(p *ProgramDef) error {
+	scriptLog.Debug("Executing program: ", p.DisplayName)
+	resp, err := sc.ExecuteTempl(execProgramTempl, p.ISEID)
+	if err != nil {
+		return err
+	}
+	if len(resp) != 1 {
+		return errors.New("Executing program: Expected exactly one response line")
+	}
+	if resp[0] != "OK" {
+		return fmt.Errorf("Executing program: HM script signals error: %s", resp[0])
+	}
+	return nil
+}
+
+// ReadExecTime reads the last execution time of a ReGaHssProgram.
+func (sc *Client) ReadExecTime(p *ProgramDef) (time.Time, error) {
+	scriptLog.Debugf("Reading last executing time: %v", p.DisplayName)
+	resp, err := sc.ExecuteTempl(readExecTimeTempl, p.ISEID)
+	if err != nil {
+		return time.Time{}, err
+	}
+	if len(resp) < 1 {
+		return time.Time{}, errors.New("Reading last executing time: Expected at least one response line")
+	}
+	if resp[0] != "OK" {
+		return time.Time{}, fmt.Errorf("Reading last executing time: HM script signals error: %s", resp[0])
+	}
+	// parse timestamp
+	ts, err := time.ParseInLocation("2006-01-02 15:04:05", resp[1], time.Local)
+	if err != nil {
+		return time.Time{}, fmt.Errorf("Reading last executing time: Invalid timestamp: %s", resp[1])
+	}
+	return ts, nil
 }
 
 // optFloat64Equal returns true, if both a and b are nil, or *a==*b.

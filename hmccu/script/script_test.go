@@ -1,7 +1,6 @@
 package script
 
 import (
-	"log"
 	"os"
 	"strings"
 	"testing"
@@ -131,25 +130,25 @@ func TestScriptClient_SystemVariables(t *testing.T) {
 				b := v.(bool)
 				err = cln.WriteSysVar(sv, !b)
 				if err != nil {
-					log.Fatal(err)
+					t.Fatal(err)
 				}
 			case "ENUM":
 				i := v.(int)
 				err = cln.WriteSysVar(sv, i+1)
 				if err != nil {
-					log.Fatal(err)
+					t.Fatal(err)
 				}
 			case "FLOAT":
 				f := v.(float64)
 				err = cln.WriteSysVar(sv, f+1.234)
 				if err != nil {
-					log.Fatal(err)
+					t.Fatal(err)
 				}
 			case "STRING":
 				s := v.(string)
 				err = cln.WriteSysVar(sv, s+"Test")
 				if err != nil {
-					log.Fatal(err)
+					t.Fatal(err)
 				}
 			}
 
@@ -173,5 +172,17 @@ func TestScriptClient_Value(t *testing.T) {
 	}
 	if ts.IsZero() {
 		t.Fatal("invalid timestamp")
+	}
+}
+
+func TestScriptClient_EnumPrograms(t *testing.T) {
+	cln := &Client{Addr: ccuAddr(t)}
+
+	ps, err := cln.Programs()
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, p := range ps {
+		t.Logf("%v", p)
 	}
 }
