@@ -115,7 +115,7 @@ var sv=dom.GetObject({{ . }});
 if (sv) {
 	if (sv.IsTypeOf(OT_DP) || sv.IsTypeOf(OT_VARDP) || sv.IsTypeOf(OT_ALARMDP)) {
 		WriteLine("OK"); 
-		WriteLine(sv.Timestamp());
+		WriteLine(sv.Timestamp().ToInteger());
 		WriteLine(sv.Value()); 
 	} else {
 		WriteLine("Object has wrong type");
@@ -611,11 +611,12 @@ func (sc *Client) ReadValue(iseID, typeStr string) (value interface{}, timestamp
 	}
 
 	// parse timestamp
-	timestamp, err0 = time.ParseInLocation("2006-01-02 15:04:05", resp[1], time.Local)
+	sec, err0 := strconv.ParseInt(resp[1], 10, 64)
 	if err0 != nil {
 		err = fmt.Errorf("Reading value of %s failed: Invalid timestamp: %s", iseID, resp[1])
 		return
 	}
+	timestamp = time.Unix(sec, 0)
 	if timestamp.Unix() == 0 {
 		uncertain = true
 	}
