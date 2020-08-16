@@ -63,6 +63,30 @@ func TestMapQuery(t *testing.T) {
 		t.Error(b)
 	}
 }
+
+func TestMapWrap(t *testing.T) {
+	var v interface{} = map[string]interface{}{"c": 42, "d": true}
+	q := Q(v)
+	m := q.Map().Wrap()
+	e1, ok := m["c"]
+	if !ok || e1.Int() != 42 {
+		t.Error(e1)
+	}
+	e2, ok := m["d"]
+	if !ok {
+		t.Error("missing entry")
+	}
+	if q.Err() != nil {
+		t.Error(q.Err())
+	}
+	if !e2.Bool() {
+		t.Error("expected true")
+	}
+	if e2.Int() != 0 || q.Err() == nil {
+		t.Error("expected error")
+	}
+}
+
 func TestSliceQuery(t *testing.T) {
 	var v interface{} = []interface{}{"a", 123.456, "b", true}
 	q := Q(v)

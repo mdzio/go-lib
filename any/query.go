@@ -152,3 +152,29 @@ func (q *MapQuery) Key(name string) *Query {
 func (q *MapQuery) TryKey(name string) *Query {
 	return q.key(name, false)
 }
+
+// Has returns true, if the the specified key exists.
+func (q *MapQuery) Has(name string) bool {
+	// previous error?
+	if q.Err() != nil {
+		return false
+	}
+	// lookup
+	_, ok := q.value[name]
+	return ok
+}
+
+// Wrap returns a new map with all values wrapped as Query.
+func (q *MapQuery) Wrap() map[string]*Query {
+	// previous error?
+	if q.Err() != nil {
+		// return empty map
+		return nil
+	}
+	// wrap map values
+	r := make(map[string]*Query)
+	for k, v := range q.value {
+		r[k] = &Query{value: v, err: q.err}
+	}
+	return r
+}
