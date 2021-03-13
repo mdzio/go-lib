@@ -8,7 +8,7 @@ import (
 
 func TestFunc(t *testing.T) {
 	l := []int{}
-	c := Func(func(ctx Context) {
+	c := DaemonFunc(func(ctx Context) {
 		l = append(l, 1)
 		if err := ctx.Sleep(1 * time.Second); err == ErrCanceled {
 			l = append(l, 2)
