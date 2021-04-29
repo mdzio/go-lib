@@ -14,6 +14,9 @@ type Context interface {
 	// Done returns a channel that is closed when work should be canceled.
 	Done() <-chan struct{}
 
+	// IsDone returns true, when work should be canceled.
+	IsDone() bool
+
 	// Sleep pauses the execution for the specified duration. If the context is
 	// canceled, Sleep returns immediately ErrCanceled.
 	Sleep(time.Duration) error
@@ -25,6 +28,16 @@ type context struct {
 
 func (c *context) Done() <-chan struct{} {
 	return c.done
+}
+
+func (c *context) IsDone() bool {
+	// a read on closed channel succeeds immediately
+	select {
+	case <-c.done:
+		return true
+	default:
+		return false
+	}
 }
 
 func (c *context) Sleep(d time.Duration) error {
