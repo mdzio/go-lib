@@ -33,11 +33,7 @@ type DaemonPool struct {
 // Run runs the specified function as daemon. The specified function can spawn
 // additional daemon functions.
 func (d *DaemonPool) Run(f func(Context)) {
-	d.once.Do(func() {
-		d.ctx = &context{
-			done: make(chan struct{}),
-		}
-	})
+	d.init()
 	d.wg.Add(1)
 	go func() {
 		defer d.wg.Done()
@@ -48,6 +44,15 @@ func (d *DaemonPool) Run(f func(Context)) {
 // Close signals to all running daemon functions that they should be canceled
 // and waits until all daemon functions return.
 func (d *DaemonPool) Close() {
+	d.init()
 	close(d.ctx.done)
 	d.wg.Wait()
+}
+
+func (d *DaemonPool) init() {
+	d.once.Do(func() {
+		d.ctx = &context{
+			done: make(chan struct{}),
+		}
+	})
 }

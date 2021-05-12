@@ -60,3 +60,8 @@ func TestDaemonPool(t *testing.T) {
 		t.Fatal(l)
 	}
 }
+
+func TestDaemonPoolNoRun(t *testing.T) {
+	p := &DaemonPool{}
+	p.Close()
+}
