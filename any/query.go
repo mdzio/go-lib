@@ -22,6 +22,11 @@ func (q *Query) Err() error {
 	return *q.err
 }
 
+// SetErr sets an error from external.
+func (q *Query) SetErr(err error) {
+	*q.err = err
+}
+
 // Bool gets a bool.
 func (q *Query) Bool() (b bool) {
 	// previous error or empty?
@@ -114,6 +119,11 @@ func (q *Query) Map() *MapQuery {
 		return &MapQuery{err: q.err}
 	}
 	return &MapQuery{value: m, err: q.err}
+}
+
+// Unwrap returns the wrapped value.
+func (q *Query) Unwrap() interface{} {
+	return q.value
 }
 
 // MapQuery helps extracting values from a map[string]interface{}.
