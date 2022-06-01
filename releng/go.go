@@ -20,7 +20,7 @@ func BuildGo(pkg, dest string, spec GoSpec) {
 	log.Debug("Arm: ", spec.Arm)
 	log.Debug("LDFlags: ", spec.LDFlags)
 
-	cmd := exec.Command("go", "build", "-o", dest, "-ldflags="+spec.LDFlags, pkg)
+	cmd := exec.Command("go", "build", "-o", dest, "-trimpath", "-ldflags="+spec.LDFlags, pkg)
 	env := os.Environ()
 	env = append(env, "GOOS="+spec.OS, "GOARCH="+spec.Arch, "GOARM="+spec.Arm)
 	cmd.Env = env
