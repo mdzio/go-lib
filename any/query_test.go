@@ -1,6 +1,9 @@
 package any
 
-import "testing"
+import (
+	"encoding/json"
+	"testing"
+)
 
 func TestQuery(t *testing.T) {
 	var v interface{} = 123.456
@@ -117,5 +120,39 @@ func TestSliceQuery(t *testing.T) {
 	}
 	if str != "" {
 		t.Error(str)
+	}
+}
+
+func TestQueryToFloat64(t *testing.T) {
+	cases := []struct {
+		val interface{}
+		exp float64
+		err string
+	}{
+		{float64(123.5), 123.5, ""},
+		{int(-42), -42, ""},
+		{"123.5", 123.5, ""},
+		{"123.5 ", 0, `unable to cast "123.5 " of type string to float64`},
+		{json.Number("33.5"), 33.5, ""},
+		{json.Number(" 33.5"), 33.5, `unable to cast " 33.5" of type json.Number to float64`},
+		{true, 1, ""},
+		{nil, 0, ""},
+	}
+	for _, c := range cases {
+		q := Q(c.val)
+		act := q.ToFloat64()
+		if q.Err() != nil {
+			if c.err == "" {
+				t.Errorf("case %#v: unexpected error: %v", c.val, q.Err())
+			} else if q.Err().Error() != c.err {
+				t.Errorf("case %#v: wrong error: %v", c.val, q.Err())
+			}
+		} else {
+			if c.err != "" {
+				t.Errorf("case %#v: expected error: %s", c.val, c.err)
+			} else if act != c.exp {
+				t.Errorf("case %#v: wrong value: %f", c.val, act)
+			}
+		}
 	}
 }

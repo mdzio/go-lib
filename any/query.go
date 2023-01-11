@@ -1,8 +1,10 @@
 package any
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
+	"strconv"
 )
 
 // Query helps extracting values from interface{} based models.
@@ -53,6 +55,62 @@ func (q *Query) Float64() (f float64) {
 	if !ok {
 		*q.err = errors.New("not a float64")
 		return
+	}
+	return
+}
+
+// ToFloat64 converts the value to a float64.
+func (q *Query) ToFloat64() (f float64) {
+	// previous error or empty?
+	if q.Err() != nil || q.value == nil {
+		return
+	}
+	// convert value
+	switch v := q.value.(type) {
+	case float64:
+		f = float64(v)
+	case float32:
+		f = float64(v)
+	case int:
+		f = float64(v)
+	case int64:
+		f = float64(v)
+	case int32:
+		f = float64(v)
+	case int16:
+		f = float64(v)
+	case int8:
+		f = float64(v)
+	case uint:
+		f = float64(v)
+	case uint64:
+		f = float64(v)
+	case uint32:
+		f = float64(v)
+	case uint16:
+		f = float64(v)
+	case uint8:
+		f = float64(v)
+	case string:
+		var err error
+		f, err = strconv.ParseFloat(v, 64)
+		if err != nil {
+			*q.err = fmt.Errorf("unable to cast %#v of type %T to float64", q.value, q.value)
+		}
+	case json.Number:
+		var err error
+		f, err = v.Float64()
+		if err != nil {
+			*q.err = fmt.Errorf("unable to cast %#v of type %T to float64", q.value, q.value)
+		}
+	case bool:
+		if v {
+			f = 1
+		} else {
+			f = 0
+		}
+	default:
+		*q.err = fmt.Errorf("unable to cast %#v of type %T to float64", q.value, q.value)
 	}
 	return
 }
