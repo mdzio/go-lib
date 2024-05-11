@@ -24,8 +24,8 @@ func init() {
 // Config reads a test configuration. Test is skipped, if the environment
 // variable with the specified name is not found.
 func Config(t *testing.T, name string) string {
-	v := os.Getenv(name)
-	if len(v) == 0 {
+	v, ok := os.LookupEnv(name)
+	if !ok {
 		t.Skip("Environment variable " + name + " not set")
 	}
 	return v
