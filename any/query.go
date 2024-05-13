@@ -246,3 +246,9 @@ func (q *MapQuery) Wrap() map[string]*Query {
 	}
 	return r
 }
+
+// Wrap returns a new map with all values wrapped as Query.
+func (q *MapQuery) Unwrap() map[string]interface{} {
+	// nil on previous error
+	return q.value
+}
