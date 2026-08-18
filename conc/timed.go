@@ -31,8 +31,6 @@ func (d *DebouncedFunc) Cancel() {
 	d.mtx.Lock()
 	defer d.mtx.Unlock()
 	if d.tmr != nil {
-		if !d.tmr.Stop() {
-			<-d.tmr.C
-		}
+		d.tmr.Stop()
 	}
 }
