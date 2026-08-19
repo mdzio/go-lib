@@ -2,10 +2,10 @@ package releng
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
+	"text/template"
 
 	"github.com/mdzio/go-logging"
 )
@@ -55,7 +55,7 @@ func Getwd() string {
 // WriteFile writes the data to the specified file.
 func WriteFile(path string, data []byte) {
 	log.Info("Writing file: ", path)
-	Must(ioutil.WriteFile(path, data, 0666))
+	Must(os.WriteFile(path, data, 0666))
 }
 
 // expand expands wildcards in CopySpec's.
@@ -84,4 +84,29 @@ func expand(specs []CopySpec) []CopySpec {
 		}
 	}
 	return ret
+}
+
+// WriteTemplate reads a template file, executes it with the provided data,
+// and writes the result to the specified output file.
+func WriteTemplate(templatePath, outputPath string, data interface{}) {
+	log.Debug("Processing template: ", templatePath)
+
+	// Read template file
+	templateContent, err := os.ReadFile(templatePath)
+	Must(err)
+
+	// Parse and execute template
+	tmpl, err := template.New(filepath.Base(templatePath)).Parse(string(templateContent))
+	Must(err)
+
+	// Create output file
+	outputFile, err := os.Create(outputPath)
+	Must(err)
+	defer outputFile.Close()
+
+	// Execute template with data and write to output file
+	err = tmpl.Execute(outputFile, data)
+	Must(err)
+
+	log.Info("Written file from template: ", outputPath)
 }
